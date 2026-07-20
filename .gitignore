@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+results/
+ncu_reports/
+plots/
+run_ncu.sh
+
