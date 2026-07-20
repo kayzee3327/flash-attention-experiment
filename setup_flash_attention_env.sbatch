@@ -9,7 +9,16 @@
 #SBATCH --time=01:00:00
 #SBATCH --gres=gpu:H100:1
 
-set -euo pipefail
+set -eo pipefail
+
+if [[ -f /home/spack/spack/share/spack/setup-env.sh ]]; then
+  source /home/spack/spack/share/spack/setup-env.sh
+  spack load cmake@3.28.6
+  spack load cuda@12.9.0
+  spack load python@3.13.0
+fi
+
+set -u
 
 # Submit from the repository root. Override FA2_BASE_PYTHON when the cluster
 # requires a module-provided Python, for example:
@@ -67,4 +76,3 @@ echo "Package snapshot: ${FA2_ENV_DIR}/requirements.lock.txt"
 echo "Submit the experiment with:"
 echo "FA2_PYTHON=${FA2_ENV_PYTHON} sbatch run_flash_attention_experiment.sbatch"
 echo "No correctness test, benchmark, or Nsight Compute command was run by this setup job."
-

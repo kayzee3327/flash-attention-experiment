@@ -9,7 +9,19 @@
 #SBATCH --time=01:00:00
 #SBATCH --gres=gpu:H100:1
 
-set -uo pipefail
+set -eo pipefail
+
+if [[ -f /home/spack/spack/share/spack/setup-env.sh ]]; then
+  source /home/spack/spack/share/spack/setup-env.sh
+  spack load cmake@3.28.6
+  spack load cuda@12.9.0
+  spack load python@3.13.0
+fi
+
+# Keep nounset/pipefail for diagnostics, but allow individual benchmark commands
+# to return nonzero so their CSV failures can be recorded and later scans continue.
+set +e
+set -u
 
 # Submit this file from the repository root. Activate the PyTorch/Triton
 # environment before sbatch, or export FA2_PYTHON with its Python executable.
@@ -123,4 +135,3 @@ echo "Nsight Compute was not run. Generate its commands separately with generate
 # Partial benchmark failures are represented in CSV and reported above. Keep the
 # Slurm allocation successful so later results are not mistaken for missing data.
 exit 0
-

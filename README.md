@@ -52,6 +52,8 @@ output = probs @ V
 
 环境配置脚本会申请一张 H100，在仓库内创建 `.venv-fa2`，安装依赖并检查 PyTorch/Triton 导入与 CUDA 可见性。它不会运行正确性测试、benchmark 或 NCU：
 
+两个 Slurm 脚本都会在 `/home/spack/spack/share/spack/setup-env.sh` 存在时加载 `cmake@3.28.6`、`cuda@12.9.0` 和 `python@3.13.0`。如果该文件不存在，脚本不会调用 Spack，并继续使用提交环境中的命令。
+
 ```bash
 sbatch setup_flash_attention_env.sbatch
 ```
