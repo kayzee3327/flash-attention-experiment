@@ -46,7 +46,37 @@ output = probs @ V
 - matplotlib
 - 可选：Nsight Compute CLI (`ncu`)，仅在用户手动 profile 时需要
 
-代码不会自动安装依赖。Triton kernel API、PyTorch SDPA 后端和 NCU 指标名称可能随版本变化；CSV 会记录 PyTorch/Triton 版本。
+正确性、benchmark、NCU 和绘图脚本不会自动安装依赖；只有用户明确提交的环境配置作业会执行安装。Triton kernel API、PyTorch SDPA 后端和 NCU 指标名称可能随版本变化；CSV 会记录 PyTorch/Triton 版本。
+
+### 使用 Slurm 配置隔离环境
+
+环境配置脚本会申请一张 H100，在仓库内创建 `.venv-fa2`，安装依赖并检查 PyTorch/Triton 导入与 CUDA 可见性。它不会运行正确性测试、benchmark 或 NCU：
+
+```bash
+sbatch setup_flash_attention_env.sbatch
+```
+
+如果集群需要指定基础 Python：
+
+```bash
+FA2_BASE_PYTHON=/path/to/python3 sbatch setup_flash_attention_env.sbatch
+```
+
+如果需要指定 PyTorch CUDA wheel 源，例如 CUDA 12.8 wheel：
+
+```bash
+FA2_TORCH_INDEX_URL=https://download.pytorch.org/whl/cu128 \
+sbatch setup_flash_attention_env.sbatch
+```
+
+默认不固定 CUDA wheel 源，由 pip 当前配置决定。应根据集群 NVIDIA Driver、CUDA 兼容性和内部镜像调整 `FA2_TORCH_INDEX_URL`。配置日志写入 `fa2env.out`，精确包版本保存到 `.venv-fa2/requirements.lock.txt`。
+
+配置成功后提交实验：
+
+```bash
+FA2_PYTHON="$PWD/.venv-fa2/bin/python" \
+sbatch run_flash_attention_experiment.sbatch
+```
 
 ## 正确性测试
 
