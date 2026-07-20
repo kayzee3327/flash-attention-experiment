@@ -76,8 +76,14 @@ sbatch setup_flash_attention_env.sbatch
 配置成功后提交实验：
 
 ```bash
-FA2_PYTHON="$PWD/.venv-fa2/bin/python" \
 sbatch run_flash_attention_experiment.sbatch
+```
+
+实验脚本会自动使用 `$SLURM_SUBMIT_DIR/.venv-fa2/bin/python`。如果环境创建在其他位置，应显式导出解释器：
+
+```bash
+sbatch --export=ALL,FA2_PYTHON=/custom/env/bin/python \
+  run_flash_attention_experiment.sbatch
 ```
 
 ## 正确性测试
@@ -120,10 +126,11 @@ output = run_attention(provider, q, k, v, sm_scale, config=None)
 sbatch run_flash_attention_experiment.sbatch
 ```
 
-脚本默认使用 `python`。如果环境未通过提交 shell 继承，可指定解释器：
+脚本默认自动使用仓库内 `.venv-fa2/bin/python`。如果环境位于其他目录，可指定解释器：
 
 ```bash
-FA2_PYTHON=/path/to/environment/bin/python sbatch run_flash_attention_experiment.sbatch
+sbatch --export=ALL,FA2_PYTHON=/path/to/environment/bin/python \
+  run_flash_attention_experiment.sbatch
 ```
 
 结果写入 `results/slurm_$SLURM_JOB_ID/`。正确性失败会停止任务；benchmark 的局部 OOM、编译失败或运行失败会保存在 CSV 中并继续后续扫描。Slurm 标准输出写入 `fa2fwd.out`。

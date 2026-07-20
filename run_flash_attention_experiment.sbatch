@@ -23,11 +23,35 @@ fi
 set +e
 set -u
 
-# Submit this file from the repository root. Activate the PyTorch/Triton
-# environment before sbatch, or export FA2_PYTHON with its Python executable.
+# Submit this file from the repository root. FA2_PYTHON takes precedence; when
+# it is unset, automatically use the environment created by the setup job.
 cd "${SLURM_SUBMIT_DIR:?SLURM_SUBMIT_DIR is not set; submit this script with sbatch}"
 
-FA2_PYTHON="${FA2_PYTHON:-python}"
+if [[ -n "${FA2_PYTHON:-}" ]]; then
+    FA2_PYTHON="${FA2_PYTHON}"
+elif [[ -x "${SLURM_SUBMIT_DIR}/.venv-fa2/bin/python" ]]; then
+    FA2_PYTHON="${SLURM_SUBMIT_DIR}/.venv-fa2/bin/python"
+else
+    echo "ERROR: no experiment Python environment was found."
+    echo "Run: sbatch setup_flash_attention_env.sbatch"
+    echo "Or submit with: sbatch --export=ALL,FA2_PYTHON=/path/to/python run_flash_attention_experiment.sbatch"
+    exit 2
+fi
+
+if [[ "${FA2_PYTHON}" == */* ]]; then
+    if [[ ! -x "${FA2_PYTHON}" ]]; then
+        echo "ERROR: FA2_PYTHON is not executable: ${FA2_PYTHON}"
+        exit 2
+    fi
+else
+    FA2_PYTHON_COMMAND=$(command -v "${FA2_PYTHON}" || true)
+    if [[ -z "${FA2_PYTHON_COMMAND}" ]]; then
+        echo "ERROR: FA2_PYTHON was not found on PATH: ${FA2_PYTHON}"
+        exit 2
+    fi
+    FA2_PYTHON="${FA2_PYTHON_COMMAND}"
+fi
+
 FA2_RESULT_DIR="results/slurm_${SLURM_JOB_ID:?SLURM_JOB_ID is not set}"
 FA2_FAILURES=0
 
@@ -38,6 +62,8 @@ echo "job_id=${SLURM_JOB_ID}"
 echo "host=$(hostname)"
 echo "repository=${SLURM_SUBMIT_DIR}"
 echo "python=${FA2_PYTHON}"
+FA2_PYTHON_RESOLVED=$(readlink -f "${FA2_PYTHON}")
+echo "python_resolved=${FA2_PYTHON_RESOLVED}"
 echo "results=${FA2_RESULT_DIR}"
 
 # Fail before starting the experiment if the selected environment is unusable.

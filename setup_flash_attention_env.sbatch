@@ -74,5 +74,9 @@ echo "===== setup complete ====="
 echo "Environment Python: ${FA2_ENV_PYTHON}"
 echo "Package snapshot: ${FA2_ENV_DIR}/requirements.lock.txt"
 echo "Submit the experiment with:"
-echo "FA2_PYTHON=${FA2_ENV_PYTHON} sbatch run_flash_attention_experiment.sbatch"
+if [[ "${FA2_ENV_DIR}" == "${SLURM_SUBMIT_DIR}/.venv-fa2" ]]; then
+    echo "sbatch run_flash_attention_experiment.sbatch"
+else
+    echo "sbatch --export=ALL,FA2_PYTHON=${FA2_ENV_PYTHON} run_flash_attention_experiment.sbatch"
+fi
 echo "No correctness test, benchmark, or Nsight Compute command was run by this setup job."
